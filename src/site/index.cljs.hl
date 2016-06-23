@@ -1,0 +1,22 @@
+(page
+ "index.html"
+ (:require
+  [secretary.core :as secretary]
+  [site.elements :as e]
+  [site.nav :as n]
+  [site.route :as r]
+  [site.semantic :refer [content container]]))
+
+(set! cljs.core/*print-fn* #(.log js/console %))
+
+(with-init!
+  (n/setup-navigation)
+  (r/add-routes r/routes)
+  (n/dispatch-path!))
+
+(html
+ (e/head (title (text "Hoplon SPA with multiple 'views'")))
+ (body
+  (e/menubar)
+  (content
+   (cell= (r/view)))))

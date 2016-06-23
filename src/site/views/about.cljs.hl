@@ -1,0 +1,6 @@
+(ns site.views.about)
+
+(defelem view []
+  (div
+   (h1 "About")
+   (a :href "/home" "Home")))
