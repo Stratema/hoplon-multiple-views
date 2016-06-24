@@ -1,11 +1,12 @@
 (ns site.route
-  (:require-macros [javelin.core :refer [defc= dosync]])
   (:require
    [cljs.core.match :refer-macros [match]]
+   [javelin.core :refer-macros [defc= dosync]]
    [secretary.core :as sec]
    [site.app :as a]
    [site.views.home :as home]
-   [site.views.about :as about]))
+   [site.views.about :as about]
+   [site.views.account :as account]))
 
 (def routes
   ["/"
@@ -27,4 +28,5 @@
   (match a/resource
          :home home/view
          :about about/view
+         :account account/view
          :else home/view))

@@ -2,5 +2,5 @@
 
 (defelem view []
   (div
-   (h1 "Hello, World!")
-   (a :href "/about" "About")))
+   (h1 "Home")
+   (p "Hello, World!")))

@@ -1,11 +1,10 @@
 (ns site.app
-  (:require-macros
-   [javelin.core :refer [defc defc=]])
   (:import
    [goog History]
    [goog.history Html5History])
   (:require
    [hoplon.storage-atom :refer [local-storage]]
+   [javelin.core :refer-macros [defc defc=]]
    [javelin.core :refer [cell]]))
 
 ;; Fix goog History to prevent it repeating the querystring
@@ -19,13 +18,18 @@
 
 (def history (if (.isSupported Html5History)
                (doto (Html5History.)
-                 (.setUseFragment true)
+                 (.setUseFragment false)
                  (.setPathPrefix ""))
                (History.)))
 
 (defc context nil)
+(defc state nil)
+
 (defc resource nil)
 (defc action nil)
 (defc stage nil)
+
 (defc path nil)
 (defc token nil)
+
+(defc= logged-in? (boolean (:account state)))

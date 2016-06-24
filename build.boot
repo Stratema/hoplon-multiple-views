@@ -10,7 +10,6 @@
 
                  [org.clojure/core.match    "0.3.0-alpha4"]
                  [com.andrewmcveigh/cljs-time "0.3.14"]
-                 [kamos/semantic-ui         "2.1.4-SNAPSHOT"] ;[cljsjs/semantic-ui        "2.1.8-0"]
                  [secretary                 "1.2.3"]]
 
  :source-paths   #{"src"}
@@ -27,10 +26,6 @@
   "Build site for local development."
   []
   (comp
-   (from-cljsjs :profile :development)
-   (sift :to-resource #{#"themes"})
-   (sift :to-resource #{#"semantic-ui.inc.css"})
-   (sift :move {#"^semantic-ui.inc.css$" "semantic-ui.css"})
    (watch)
    (speak)
    (hoplon :pretty-print true)
@@ -43,14 +38,6 @@
   "Build site for production deployment."
   []
   (comp
-   (from-cljsjs :profile :development)
-   (sift :to-resource #{#"themes" #"semantic-ui.inc.css"})
-   (sift :move {#"themes" "css/themes/" #"^semantic-ui.inc.css$" "css/semantic-ui.css"})
    (hoplon)
    (cljs :optimizations :advanced)
    (target :dir #{"target"})))
-
-;; Might need this:
-;; (from-cljsjs :profile :development)
-;; (sift :to-resource #{#"themes" #"semantic-ui.inc.css"})
-;; (sift :move {#"themes" "css/themes/" #"^semantic-ui.inc.css$" "css/semantic-ui.css"})

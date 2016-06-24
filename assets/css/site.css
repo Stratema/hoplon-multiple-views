@@ -1,0 +1,11 @@
+.main.container {
+  margin-top: 7em;
+}
+
+.ui.menu .container .ui.button {
+  margin-left: 0.5em;
+}
+
+.hidden {
+  display: none !important;
+}

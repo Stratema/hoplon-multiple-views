@@ -1,0 +1,62 @@
+(ns site.views.account
+  (:require
+   [cljs.core.match :refer-macros [match]]
+   [site.app :as a]))
+
+(def fake-account (cell {}))
+
+(defelem display-account []
+  (div
+   (h1 "Account")
+   (p (text "Welcome back ~(-> a/state :account :name)"))))
+
+(defelem register-1 []
+  (div
+   (h1 "Please enter your name")
+   (form :class "ui form"
+         (div :class "field"
+              (input :type "text"
+                     :change #(swap! fake-account assoc :name @%)))
+         (a :class "ui button" :href "/account/register/2" "Next"))))
+
+(defelem register-2 []
+  (div
+   (h1 "Please enter your email address")
+   (form :class "ui form"
+         (div :class "field"
+              (input :type "email"
+                     :change #(swap! fake-account assoc :email @%)))
+         (a :class "ui button" :href "/account/register/3" "Next"))))
+
+(defelem register-3 []
+  (div
+   (h1 "Thank you for registering")
+   (p "Please click to login:")
+   (a :class "ui button" :href "/account" "Login")))
+
+(defelem login []
+  (let [login-email (cell nil)]
+    (div
+     (h1 "Login")
+     (p "You can only click the Login! button if you type the correct email address.")
+     (form :class "ui form"
+           (div :class "field"
+                (input :type "text" :keyup #(reset! login-email @%)))
+           (a :class (cell= {:ui true :button true
+                             :disabled (not (and (not-empty login-email)
+                                                 (= login-email (:email fake-account))))})
+              :click #(swap! a/state assoc :account @fake-account)
+              "Login!")))))
+
+(defelem not-found []
+  (div
+   (h1 "Not found")))
+
+(defc= view
+  (match [a/logged-in? a/action a/stage]
+         [true  _ _] display-account
+         [false :register :3] register-3
+         [false :register :2] register-2
+         [false :register _] register-1
+         [false _ _] login
+         :else not-found))
