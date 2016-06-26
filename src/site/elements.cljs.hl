@@ -1,0 +1,42 @@
+(ns site.elements
+  (:refer-hoplon :exclude [main form])
+  (:require
+   [site.app :as a]
+   [site.nav :as n]))
+
+(defelem row       [attr kids] ((div :class "row") attr kids))
+(defelem column    [attr kids] ((div :class "column") attr kids))
+(defelem col8      [attr kids] ((column :class "eight wide") attr kids))
+(defelem col12     [attr kids] ((column :class "twelve wide") attr kids))
+(defelem grid      [attr kids] ((div :class "ui grid") attr kids))
+(defelem segment   [attr kids] ((div :class "ui segment") attr kids))
+(defelem container [attr kids] ((div :class "ui container") attr kids))
+(defelem main      [attr kids] ((container :class "main text") attr kids))
+(defelem form      [attr kids] ((div :class "ui form") attr kids))
+(defelem field     [attr kids] ((div :class "field") attr kids))
+(defelem fields    [attr kids] ((div :class "fields") attr kids))
+(defelem content   [attr kids] ((div :class "content") attr kids))
+
+(defelem menubar []
+  (div :class "ui top fixed large inverted menu"
+       (container
+        (a :class "header item" :href "/home" "Home")
+        (a :class "item" :href "/about" "About")
+        (div :class "right item"
+             (form :class "ui inverted form"
+                   (div :class "ui toggle checkbox"
+                        (input :type "checkbox")
+                        (label  "Show state?"))))
+        (div :class (cell= {:right true :item true :hidden a/logged-in?})
+             (a :class "ui inverted button" :href "/account" "Login")
+             (a :class "ui inverted button" :href "/account/register" "Register"))
+        (div :class (cell= {:right true :item true :hidden (not a/logged-in?)})
+             (a :class "ui inverted button"
+                :click #(swap! a/state dissoc :account) "Logout")))))
+
+(defelem state []
+  (footer
+   (p (text "State is: ~{a/state}"))
+   (p (text "resource = ~{a/resource}"))
+   (p (text "action = ~{a/action}"))
+   (p (text "stage = ~{a/stage}"))))

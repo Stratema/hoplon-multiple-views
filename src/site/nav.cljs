@@ -1,29 +1,50 @@
 (ns site.nav
+  (:import
+   [goog History]
+   [goog.history Html5History]
+   [goog Uri])
   (:require
    [goog.events :as events]
    [goog.history.EventType :as EventType]
    [secretary.core :refer [dispatch! locate-route]]
-   [site.app :as a]
-   [site.util :as u]))
+   [site.app :as a]))
 
-(defn push
-  ([path] (push path nil))
-  ([path title] (.setToken a/history path title)))
+;; Fix goog History to prevent it repeating the querystring
+;; From http://www.lispcast.com/mastering-client-side-routing-with-secretary-and-goog-history
+(aset js/goog.history.Html5History.prototype "getUrl_"
+      (fn [token]
+        (this-as this
+          (if (.-useFragment_ this)
+            (str "#" token)
+            (str (.-pathPrefix_ this) token)))))
 
-(defn scroll-to [fragment]
-  (let [pos (if-let [offset (and (not-empty fragment)
-                                 (-> (js/$ (str "#" fragment))
-                                     (.first)
-                                     (.offset)))]
-              (- (.-top offset) 50)
-              0)]
-    (.log js/console "Scrolling to:" pos)
-    (.animate (js/$ "html,body") #js {:scrollTop pos} 750)))
+(def history (if (.isSupported Html5History)
+               (doto (Html5History.)
+                 (.setUseFragment false)
+                 (.setPathPrefix ""))
+               (History.)))
+
+(defn parse-uri
+  "Expand the uri into the component parts and return as a map"
+  [uri]
+  (let [u (.parse Uri uri)]
+    {:scheme (.getScheme u)
+     :domain (.getDomain u)
+     :port (.getPort u)
+     :path (.getPath u)
+     :query (.getQuery u)
+     :fragment (.getFragment u)}))
+
+(defn pqf
+  "Concatenate the path, query and fragment from an expanded uri"
+  [u]
+  (str (:path u)
+       (when-let [q (not-empty (:query u))] (str \? q))
+       (when-let [f (not-empty (:fragment u))] (str \# f))))
 
 (defn on-document-click [e]
   ;; If target is A then great
   ;; If target is I, an icon, then get parent A and substitute for the target
-  ;; (.log js/console "Click target:" (.-target e))
   (let [tag-name (.. e -target -tagName)
         parent (.. e -target -parentElement)
         target (cond (= tag-name "A")
@@ -34,27 +55,22 @@
     (when target
       (let [href (.-href target)
             title (.-title target)
-            {:keys [path fragment] :as u} (u/parse-uri href)
+            {:keys [path fragment] :as u} (parse-uri href)
             route (locate-route path)]
-        (.log js/console "uri:" (clj->js u))
-        (.log js/console "route:" (clj->js route))
         (when route
-          (push (u/pqf u) title)
-          (.preventDefault e)
-          (scroll-to fragment))))))
+          (.setToken history (pqf u) title)
+          (.preventDefault e))))))
 
 (defn on-history-navigate [e]
-  (.log js/console "Dispatch on path:" (.-token e))
   (dispatch! (.-token e)))
 
 (defn setup-navigation []
-  (.setEnabled a/history true)
+  (.setEnabled history true)
   (events/listen js/document "click" on-document-click)
-  (events/listen a/history EventType/NAVIGATE on-history-navigate))
+  (events/listen history EventType/NAVIGATE on-history-navigate))
 
 (defn dispatch-path! []
-  (let [{:keys [path query] :as uri} (u/parse-uri (.-location js/window))]
-    (.log js/console path)
-    (if (and (not= path "/")
-             (not= path "/home"))
-      (dispatch! (u/pqf uri)))))
+  (let [{:keys [path query] :as uri} (parse-uri (.-location js/window))]
+    (when (and (not= path "/")
+               (not= path "/home"))
+      (dispatch! (pqf uri)))))

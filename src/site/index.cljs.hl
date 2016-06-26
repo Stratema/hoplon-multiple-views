@@ -1,14 +1,10 @@
 (page
  "index.html"
  (:require
-  [secretary.core :as secretary]
-  [site.elements :as e]
   [site.app :as a]
+  [site.elements :as e]
   [site.nav :as n]
-  [site.route :as r]
-  [site.semantic :refer [content container]]))
-
-(set! cljs.core/*print-fn* #(.log js/console %))
+  [site.route :as r]))
 
 (with-init!
   (n/setup-navigation)
@@ -16,15 +12,14 @@
   (n/dispatch-path!))
 
 (html
- (e/head (title (text "Hoplon SPA with multiple 'views'")))
+ (head
+  (html-meta :charset "utf-8")
+  (link :href "//cdn.jsdelivr.net/semantic-ui/2.1.8/semantic.min.css" :rel "stylesheet" :media "screen")
+  (link :href "/css/site.css" :rel "stylesheet" :media "screen")
+  (title "Hoplon SPA with multiple 'views'"))
  (body
   (e/menubar)
-  (div
-   :class "ui main text container"
-   (content
+  (e/main
+   (e/content
     (cell= (r/view))))
-  #_(footer
-   (p (text "State is: ~{a/state}"))
-   (p (text "resource = ~{a/resource}"))
-   (p (text "action = ~{a/action}"))
-   (p (text "stage = ~{a/stage}")))))
+  (e/state)))

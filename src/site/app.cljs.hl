@@ -1,0 +1,13 @@
+(ns site.app)
+
+(defc state nil)
+
+(defc context nil)
+(defc resource nil)
+(defc action nil)
+(defc stage nil)
+
+(defc path nil)
+(defc token nil)
+
+(defc= logged-in? (boolean (:account state)))
