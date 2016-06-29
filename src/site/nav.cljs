@@ -6,8 +6,13 @@
   (:require
    [goog.events :as events]
    [goog.history.EventType :as EventType]
-   [secretary.core :refer [dispatch! locate-route]]
-   [site.app :as a]))
+   [cljs.core.match :refer-macros [match]]
+   [javelin.core :refer-macros [defc= dosync]]
+   [secretary.core :as s]
+   [site.app :as a]
+   [site.views.home :as home]
+   [site.views.about :as about]
+   [site.views.account :as account]))
 
 ;; Fix goog History to prevent it repeating the querystring
 ;; From http://www.lispcast.com/mastering-client-side-routing-with-secretary-and-goog-history
@@ -18,11 +23,19 @@
             (str "#" token)
             (str (.-pathPrefix_ this) token)))))
 
+;; Setup Html5History, if supported by the browser or regular History,
+;; object if not
 (def history (if (.isSupported Html5History)
                (doto (Html5History.)
                  (.setUseFragment false)
                  (.setPathPrefix ""))
                (History.)))
+
+(def routes
+  ["/"
+   "/:resource"
+   "/:resource/:action"
+   "/:resource/:action/:stage"])
 
 (defn parse-uri
   "Expand the uri into the component parts and return as a map"
@@ -56,21 +69,39 @@
       (let [href (.-href target)
             title (.-title target)
             {:keys [path fragment] :as u} (parse-uri href)
-            route (locate-route path)]
+            route (s/locate-route path)]
         (when route
           (.setToken history (pqf u) title)
           (.preventDefault e))))))
 
 (defn on-history-navigate [e]
-  (dispatch! (.-token e)))
-
-(defn setup-navigation []
-  (.setEnabled history true)
-  (events/listen js/document "click" on-document-click)
-  (events/listen history EventType/NAVIGATE on-history-navigate))
+  (s/dispatch! (.-token e)))
 
 (defn dispatch-path! []
   (let [{:keys [path query] :as uri} (parse-uri (.-location js/window))]
     (when (and (not= path "/")
                (not= path "/home"))
-      (dispatch! (pqf uri)))))
+      (s/dispatch! (pqf uri)))))
+
+(defn add-routes [routes]
+  (doseq [route routes]
+    (s/add-route!
+     route (fn [{:keys [resource action stage] :as context}]
+             (dosync
+              (reset! a/context context)
+              (reset! a/resource (keyword resource))
+              (reset! a/action (keyword action))
+              (reset! a/stage (keyword stage)))))))
+
+(defn setup []
+  (.setEnabled history true)
+  (events/listen js/document "click" on-document-click)
+  (events/listen history EventType/NAVIGATE on-history-navigate)
+  (add-routes routes))
+
+(defc= view
+  (match a/resource
+         :home home/view
+         :about about/view
+         :account account/view
+         :else home/view))

@@ -3,12 +3,10 @@
  (:require
   [site.app :as a]
   [site.elements :as e]
-  [site.nav :as n]
-  [site.route :as r]))
+  [site.nav :as n]))
 
 (with-init!
-  (n/setup-navigation)
-  (r/add-routes r/routes)
+  (n/setup)
   (n/dispatch-path!))
 
 (html
@@ -21,5 +19,5 @@
   (e/menubar)
   (e/main
    (e/content
-    (cell= (r/view))))
+    (cell= (n/view))))
   (e/state)))
